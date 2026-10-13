@@ -1,0 +1,9 @@
+# Source data
+Data.xlsx
+
+# Generated outputs
+Output Template *.xlsx
+
+# Python
+__pycache__/
+*.pyc
