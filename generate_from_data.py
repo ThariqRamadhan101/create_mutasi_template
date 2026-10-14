@@ -62,6 +62,22 @@ OUTPUT_FILES = {
     "template4": os.path.join(BASE_DIR, "Output Template 4.xlsx"),
 }
 
+# Baris header yang diulang saat print (print titles) per template
+PRINT_TITLES = {
+    "template1": "5:6",
+    "template2": "5:6",
+    "template3": "4:4",
+    "template4": "4:5",
+}
+
+# Font nomor halaman di header per template (menyesuaikan font body template)
+HEADER_FONT = {
+    "template1": ("Bookman Old Style", 10),
+    "template2": ("Arial", 10),
+    "template3": ("Arial", 10),
+    "template4": ("Arial", 10),
+}
+
 BULAN_INDONESIA = {
     "01": "Januari", "02": "Februari", "03": "Maret", "04": "April",
     "05": "Mei", "06": "Juni", "07": "Juli", "08": "Agustus",
@@ -196,6 +212,24 @@ def apply_row_style(ws, row, styles, height):
         cell.alignment = style["alignment"]
 
 
+def apply_print_settings(ws, template_key):
+    """Terapkan print titles (header berulang) dan nomor halaman di header.
+
+    - Print titles: baris header diulang di setiap halaman cetak.
+    - Nomor halaman: format '- &P -' di bagian ATAS (header center),
+      nomor halaman dimulai dari 2 (halaman 1 = '- 2 -'),
+      font menyesuaikan font body masing-masing template.
+    """
+    ws.print_title_rows = PRINT_TITLES[template_key]
+    font_name, font_size = HEADER_FONT[template_key]
+    for part in (ws.oddHeader, ws.evenHeader, ws.firstHeader):
+        part.center.text = "- &P -"
+        part.center.font = font_name
+        part.center.size = font_size
+    ws.page_setup.firstPageNumber = 2
+    ws.page_setup.useFirstPageNumber = True
+
+
 def group_by_penempatan(rows):
     """Kelompokkan baris berdasarkan Unit Kerja Penempatan sesuai urutan tetap."""
     groups = OrderedDict()
@@ -247,6 +281,8 @@ def build_template1_sheet(ws, rows):
             current_row += 1
             no += 1
 
+    apply_print_settings(ws, "template1")
+
 
 def generate_template1(data_rows):
     src = TEMPLATE_FILES["template1"]
@@ -285,9 +321,11 @@ def build_template2_sheet(ws, rows):
     """Susun worksheet Template 2 dengan merge hierarkis per kolom."""
     max_col = ws.max_column
 
-    # Capture style baris data (baris 7) dan tinggi baris
+    # Capture style baris data (baris 7) dan baris TOTAL contoh (baris 8)
     data_row_styles = capture_row_style(ws, 7, max_col)
     data_row_height = ws.row_dimensions[7].height
+    total_row_styles = capture_row_style(ws, 8, max_col)
+    total_row_height = ws.row_dimensions[8].height
 
     # Hapus merge cells di area data agar tidak mengganggu baris baru
     for merged_range in list(ws.merged_cells.ranges):
@@ -377,6 +415,22 @@ def build_template2_sheet(ws, rows):
             ws.merge_cells(start_row=start_row, start_column=2, end_row=end_row, end_column=2)
         i = j
 
+    # Baris TOTAL di bawah data (contoh baris 8 di template): merge A:E,
+    # kolom F = jumlah seluruh "Jumlah Pegawai", kolom G = jumlah total grup
+    grand_total = sum(
+        ws.cell(r, 6).value or 0
+        for r in range(7, current_row)
+    )
+    total_row = current_row
+    ws.insert_rows(total_row)
+    apply_row_style(ws, total_row, total_row_styles, total_row_height)
+    ws.cell(total_row, 1).value = "TOTAL"
+    ws.merge_cells(start_row=total_row, start_column=1, end_row=total_row, end_column=5)
+    ws.cell(total_row, 6).value = grand_total
+    ws.cell(total_row, 7).value = grand_total
+
+    apply_print_settings(ws, "template2")
+
 
 def generate_template2(data_rows):
     src = TEMPLATE_FILES["template2"]
@@ -439,6 +493,8 @@ def generate_template3(data_rows):
         ws.cell(r, 3).value = unit_asal
         ws.cell(r, 4).value = row["balai_penugasan"]
 
+    apply_print_settings(ws, "template3")
+
     wb.save(dst)
     wb.close()
     print(f"[OK] {dst} - {len(data_rows)} baris data")
@@ -480,6 +536,8 @@ def build_template4_sheet(ws, rows, unit_org_title=None):
         ws.cell(current_row, 4).value = row["unit_kerja"]
         ws.cell(current_row, 5).value = row["balai_penugasan"]
         current_row += 1
+
+    apply_print_settings(ws, "template4")
 
 
 def generate_template4(data_rows):

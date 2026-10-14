@@ -147,13 +147,17 @@ def validate():
         expected = []
         exp_no = 0
         exp_penempatan = None
+        exp_grand_total = 0
         for (penempatan, unit_org, unit_kerja), jabatan_counts in sorted_groups:
             if penempatan != exp_penempatan:
                 exp_no += 1
                 exp_penempatan = penempatan
             total = sum(jabatan_counts.values())
+            exp_grand_total += total
             for jabatan, count in jabatan_counts.items():
                 expected.append((exp_no, penempatan, unit_org, unit_kerja, jabatan, count, total))
+        # Baris TOTAL di bawah data: merge A:E "TOTAL", F & G = total keseluruhan
+        expected.append(("TOTAL", "TOTAL", "TOTAL", "TOTAL", "", exp_grand_total, exp_grand_total))
 
         actual = []
         for r in range(7, ws.max_row + 1):

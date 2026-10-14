@@ -19,6 +19,9 @@ There is no linter, test framework, or package manifest — these two scripts ar
 - `validate_outputs.py` imports helpers from `generate_from_data.py`; keep them in sync when changing grouping/column logic.
 - Style is captured from a fixed sample row and re-applied to inserted rows via `capture_row_style` / `apply_row_style`. When row layout changes, update the sampled row index in the relevant builder.
 - Template 2 must `unmerge_cells` the leftover merged ranges from the template before `delete_rows`, or stale merges corrupt the rebuilt sheet.
+- Print settings (`print_title_rows` + page-number header) are NOT copied by `copy_worksheet` — `apply_print_settings(ws, template_key)` must run at the end of every per-sheet builder. Print title rows per template: T1/T2 = 5:6, T3 = 4:4, T4 = 4:5.
+- Page number lives in the **header** (top), not the footer: format `"- &P -"` with `firstPageNumber = 2` (first printed page shows "- 2 -"). Font matches each template's body font via `HEADER_FONT`: T1 = Bookman Old Style 10, T2/T3/T4 = Arial 10.
+- Template 2: the sample TOTAL row lives at template row 8 (merged A:E, values in F & G). `build_template2_sheet` must capture its style before `delete_rows` and rebuild a TOTAL row under the data (F = G = grand total of all people). `validate_outputs.py` expects this row in its `expected` list.
 
 ## Input / output files
 - `Data.xlsx` — source data. Columns A–J: Nama, NIP, Pangkat, Golongan, TMT, Jabatan, Unit Organisasi, Unit Kerja, Propinsi, Balai Penugasan. Row 1 is a header; data starts at row 2.
