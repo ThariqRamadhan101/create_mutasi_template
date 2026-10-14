@@ -78,10 +78,20 @@ HEADER_FONT = {
     "template4": ("Arial", 10),
 }
 
-BULAN_INDONESIA = {
-    "01": "Januari", "02": "Februari", "03": "Maret", "04": "April",
-    "05": "Mei", "06": "Juni", "07": "Juli", "08": "Agustus",
-    "09": "September", "10": "Oktober", "11": "November", "12": "Desember",
+# Baris header yang diulang saat print (print titles) per template
+PRINT_TITLES = {
+    "template1": "5:6",
+    "template2": "5:6",
+    "template3": "4:4",
+    "template4": "4:5",
+}
+
+# Font header nomor halaman per template (menyesuaikan font body template)
+HEADER_FONT = {
+    "template1": ("Bookman Old Style", 10),
+    "template2": ("Arial", 10),
+    "template3": ("Arial", 10),
+    "template4": ("Arial", 10),
 }
 
 
